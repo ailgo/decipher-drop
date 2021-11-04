@@ -23,5 +23,5 @@ pws = get_passwords()
 for idx in range(N-1):
     simulate_claim(seeder, pws[idx], nftIds[idx])
 
-#print("Recovering unclaimed NFT")
-#recover(seeder, seeder_key, nftIds[-1])
+print("Recovering unclaimed NFT")
+recover(seeder, seeder_key, pws[-1], nftIds[-1])
