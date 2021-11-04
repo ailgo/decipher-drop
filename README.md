@@ -21,11 +21,11 @@ Three operations against the Escrow logic are allowed:
 
 *escrow.py* - contains PyTEAL logic to generate template contract
 
-*seed.py* - python logic to create `escrow` and send initial seed group txns from `seeder`
+*seed.py* - Python logic to create `escrow` and send initial seed group txns from `seeder`
 
-*claim.py* - python logic to simulate what a `claimer` will need to send to claim the NFT
+*claim.py* - Python logic to simulate what a `claimer` will need to send to claim the NFT
 
-*recover.py* - python logic to simulate what the `seeder` will need to send to recover any unclaimed NFTs
+*recover.py* - Python logic to simulate what the `seeder` will need to send to recover any unclaimed NFTs
 
 
 ## Running
@@ -36,6 +36,7 @@ clone sandbox and run:
 cd sandbox && ./sandbox up dev
 ```
 
+cd to this repo and run:
 ```sh
 python demo.py
 ```
