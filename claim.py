@@ -12,7 +12,7 @@ client = AlgodClient("a"*64, "http://localhost:4001")
 
 def get_passwords() -> List[str]:
     with open("passwords.csv", "r") as f:
-        return f.readlines()
+        return f.read().splitlines()
 
 def get_escrows(seeder: str, pws: List[str]) -> List[str]:
     accts = []
@@ -53,7 +53,7 @@ def claim(seeder, cpk, csk, pw, nft):
     signed = [
         goptin.sign(csk),
         LogicSigTransaction(gclaim, lsig),
-        gclose.sign(csk)
+        LogicSigTransaction(gclose, lsig),
     ]
 
     txid = client.send_transactions(signed)

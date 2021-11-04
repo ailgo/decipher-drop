@@ -25,7 +25,7 @@ def populate_teal(seeder: str, pw: str, args=None) -> str:
             version=5
         )
 
-    h = hashlib.sha256(pw.encode('ascii'))
+    h = hashlib.sha256(pw.encode('utf-8'))
 
     src = tmpl_source.replace(
         "TMPL_HASH_PREIMAGE", 
@@ -59,6 +59,8 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
         payTxn = PaymentTxn(seeder, sp, lsig.address(), int(0.3*10e6))
         optInTxn = AssetTransferTxn(lsig.address(), sp, lsig.address(), 0, nftId)
         xferTxn = AssetTransferTxn(seeder, sp, lsig.address(), 1, nftId)
+
+        print(lsig.address())
 
         # group
         grouped = assign_group_id([payTxn, optInTxn, xferTxn])
@@ -94,11 +96,9 @@ def initialize_accounts(seeder, seeder_key, nfts: List[int], pw_length=5):
     # Create n passwords
     pws = [gen_pw(pw_length) for _ in range(len(nfts))]
     with open("passwords.csv", "w") as f:
-        for pw in pws:
-            f.write("{}\n".format(pw))
+        f.write("\n".join(pws))
 
     # Fund escrow accounts with the password set
     escrows = fund_accounts(seeder, seeder_key, pws, nfts)
     with open("escrows.csv", "w") as f:
-        for escrow in escrows:
-            f.write("{}\n".format(escrow))
+        f.write("\n".join(escrows))
