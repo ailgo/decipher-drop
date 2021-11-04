@@ -17,6 +17,8 @@ Three operations against the Escrow logic are allowed:
 
 ## files
 
+*demo.py* - Python logic to run e2e to simulate create nfts, create escrows, create claimers/claim txns, recover unclaimed
+
 *escrow.py* - contains PyTEAL logic to generate template contract
 
 *seed.py* - python logic to create `escrow` and send initial seed group txns from `seeder`
@@ -26,3 +28,14 @@ Three operations against the Escrow logic are allowed:
 *recover.py* - python logic to simulate what the `seeder` will need to send to recover any unclaimed NFTs
 
 
+## Running
+
+clone sandbox and run:
+
+```sh
+cd sandbox && ./sandbox up dev
+```
+
+```sh
+python demo.py
+```

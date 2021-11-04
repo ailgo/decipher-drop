@@ -1,26 +1,21 @@
-from types import List
+from typing import List
 import base64
 import string
 import hashlib
 import random
 
 from pyteal import *
-from escrow import escrow
 from algosdk import *
 from algosdk.v2client.algod import *
 from algosdk.future.transaction import *
 
+from escrow import escrow
+
 
 client = AlgodClient("a"*64, "http://localhost:4001") 
 
-pw_length = 5
-seeder = "BLKW2VKNJMIXYB2STAQHWTUIIERBKOSU2ZPJFP7NJWWPKQAJMQMJ3RRSZM"
-seeder_key = ""
-
 tmpl_source = "" # lazy populated
-
-
-def populate_teal(pw: string) -> str:
+def populate_teal(seeder: str, pw: str, args=None) -> str:
     global tmpl_source
 
     if tmpl_source == "":
@@ -30,43 +25,53 @@ def populate_teal(pw: string) -> str:
             version=5
         )
 
-    h = hashlib.sha256(pw)
+    h = hashlib.sha256(pw.encode('ascii'))
 
-    return tmpl_source.replace(
+    src = tmpl_source.replace(
         "TMPL_HASH_PREIMAGE", 
-        "b64({})".format(base64.b64encode(h.digest()))
+        "0x{}".format(h.hexdigest())
     )
+    with open("tmp.teal", "w") as f:
+        f.write(src)
 
-def fund_accounts(pws: List[str]) -> List[str]:
+    result = client.compile(src)
+
+    return LogicSigAccount(base64.b64decode(result['result']), args=args)
+
+
+def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int]) -> List[str]:
     """
-        fund_accounts takes a list of password strings, hashes the password and 
-        hardcodes it into the escrow contract
+        fund_accounts takes the seed acddress and key, a list of password strings, and nft ids
+        populate_teal returns the populated logic sig
+        it hash the password, add it to the contract, compile the contract, and return
     """
-
-    global seeder, seeder_key
-
+    accts = []
     sp = client.suggested_params()
-    for pw in pws:
-        nftId = 0
+    for idx in range(len(pws)):
 
-        lsig = LogicSigAccount(populate_teal(pw))
+        pw = pws[idx]
+        nftId = nfts[idx]
+        lsig = populate_teal(seeder, pw)
 
-        # Create Transactions 
+        accts.append(lsig.address())
 
         # seed, opt in, xfer
-        payTxn = PaymentTxn(seeder, sp, int(0.3*10e6), lsig.address())
+        payTxn = PaymentTxn(seeder, sp, lsig.address(), int(0.3*10e6))
         optInTxn = AssetTransferTxn(lsig.address(), sp, lsig.address(), 0, nftId)
-        xferTxn = AssetTransferTxn(seeder, sp, lsig.address(), 0, nftId)
+        xferTxn = AssetTransferTxn(seeder, sp, lsig.address(), 1, nftId)
 
         # group
         grouped = assign_group_id([payTxn, optInTxn, xferTxn])
 
+
         # sign 
         signed = [
             grouped[0].sign(seeder_key), 
-            transaction.LogigSigTransaction(grouped[1], lsig), 
+            LogicSigTransaction(grouped[1], lsig), 
             grouped[2].sign(seeder_key)
         ]
+
+        write_to_file(signed, "tmp.txns")
 
         # send
         txid = client.send_transactions(signed)
@@ -76,27 +81,24 @@ def fund_accounts(pws: List[str]) -> List[str]:
         if result['pool-error'] != "":
             print("Failed to send transaction: {}".format(result['pool-error']))            
 
-        print("Confirmed in round: {}".format(result['confirmed-round']))
+        print("Confirmed in round {}: {}".format(result['confirmed-round'], result))
+
+    return accts
 
 
 def gen_pw(N=5) -> str:
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=N))
+    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
 
 
-def initialize_accounts(N=5):
-    global pw_length
-
+def initialize_accounts(seeder, seeder_key, nfts: List[int], pw_length=5):
     # Create n passwords
-    pws = [gen_pw(pw_length) for _ in range(N)]
-    with open("passwords.csv", "W") as f:
+    pws = [gen_pw(pw_length) for _ in range(len(nfts))]
+    with open("passwords.csv", "w") as f:
         for pw in pws:
             f.write("{}\n".format(pw))
 
     # Fund escrow accounts with the password set
-    escrows = fund_accounts(pws)
-    with open("escrows.csv", "W") as f:
+    escrows = fund_accounts(seeder, seeder_key, pws, nfts)
+    with open("escrows.csv", "w") as f:
         for escrow in escrows:
             f.write("{}\n".format(escrow))
-
-
-initialize_accounts(N=1)

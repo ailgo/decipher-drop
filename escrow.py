@@ -1,7 +1,7 @@
 from pyteal import *
 
 def escrow(seed_addr: str):
-    seeder = Bytes(seed_addr)
+    seeder = Addr(seed_addr)
     is_valid_seed = And(
         Global.group_size() == Int(3),
 
@@ -52,34 +52,32 @@ def escrow(seed_addr: str):
     is_valid_recover = And(
         Global.group_size() == Int(3),
 
+        # Make sure seeder cosigned
+        Gtxn[0].type_enum() == TxnType.Payment,
+        Gtxn[0].sender() == seeder,
+        Gtxn[0].receiver() == seeder,
+        Gtxn[0].amount() == Int(0),
+        Gtxn[0].close_remainder_to() == Global.zero_address(),
+        Gtxn[0].rekey_to() == Global.zero_address(),
 
         # Close out asset
-        Gtxn[0].type_enum() == TxnType.AssetTransfer,
-        Gtxn[0].asset_amount() == Int(0),
-        Gtxn[0].asset_close_to() == seeder,
+        Gtxn[1].type_enum() == TxnType.AssetTransfer,
+        Gtxn[1].asset_amount() == Int(0),
+        Gtxn[1].asset_close_to() == seeder,
 
         # Close out algos 
-        Gtxn[1].type_enum() == TxnType.Payment,
-        Gtxn[1].amount() == Int(0),
-        Gtxn[1].close_remainder_to() == seeder,
-
-        # Make sure seeder cosigned
         Gtxn[2].type_enum() == TxnType.Payment,
-        Gtxn[2].sender() == seeder,
-        Gtxn[2].receiver() == seeder,
         Gtxn[2].amount() == Int(0),
-        Gtxn[2].close_remainder_to() == Global.zero_address(),
-        Gtxn[2].rekey_to() == Global.zero_address()
+        Gtxn[2].close_remainder_to() == seeder,
     )
 
-    return Or(
-       is_valid_seed,
-       is_valid_claim,
-       is_valid_recover,
+    return Cond(
+        [Gtxn[0].sender() == seeder, Return(Or(is_valid_seed, is_valid_recover))],
+        [Gtxn[0].sender() != seeder, Return(is_valid_claim)]
     )
 
 if __name__=="__main__":
-    seed_addr = "BLKW2VKNJMIXYB2STAQHWTUIIERBKOSU2ZPJFP7NJWWPKQAJMQMJ3RRSZM"
+    seed_addr = ""
     with open("escrow.tmpl.teal", "w") as f:
         f.write(compileTeal(
             escrow(seed_addr), 
