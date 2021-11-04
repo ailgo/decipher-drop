@@ -31,8 +31,6 @@ def populate_teal(seeder: str, pw: str, args=None) -> str:
         "TMPL_HASH_PREIMAGE", 
         "0x{}".format(h.hexdigest())
     )
-    with open("tmp.teal", "w") as f:
-        f.write(src)
 
     result = client.compile(src)
 
@@ -60,8 +58,6 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
         optInTxn = AssetTransferTxn(lsig.address(), sp, lsig.address(), 0, nftId)
         xferTxn = AssetTransferTxn(seeder, sp, lsig.address(), 1, nftId)
 
-        print(lsig.address())
-
         # group
         grouped = assign_group_id([payTxn, optInTxn, xferTxn])
 
@@ -72,8 +68,6 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
             LogicSigTransaction(grouped[1], lsig), 
             grouped[2].sign(seeder_key)
         ]
-
-        write_to_file(signed, "tmp.txns")
 
         # send
         txid = client.send_transactions(signed)
