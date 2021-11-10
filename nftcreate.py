@@ -17,7 +17,6 @@ def create(pk, sk):
     signed = createTxn.sign(sk)
     txid = client.send_transaction(signed)
     res = wait_for_confirmation(client, txid, 3)
-    print(res)
     return res['asset-index']
 
 def createNFTs(pk, sk, N=5)->List[int]:
