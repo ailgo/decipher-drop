@@ -4,7 +4,9 @@
 
 To support a low touch claiming of NFTs for the Decipher Event.
 
-Some number of Escrow accounts are seeded with algos and an NFT. The Escrow account will allow any account holding the password to claim the NFT given the correct password. The password passed as the first argument in the transaction is hashed using `Sha256` and compared with the hash hardcoded in the contract. 
+Some number of Escrow accounts are seeded with algos and an NFT. The Escrow account will allow any account holding the password to claim the NFT given the correct password. The password is used to generate a valid Ed25519 signing key and the public key is hardcoded into the . In order to claim the NFT, the same key can be generated from the password, salt and scrypt settings or passed directly.  The key is then used to sign the transaction id of the second transactions in the the atomic group and the signature is passed as the 0th argument.  The contract validates that the signature passed is a valid for the address it was populated with. 
+
+
 
 ## Contract Operations
 

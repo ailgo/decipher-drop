@@ -4,7 +4,7 @@ from seed import *
 from claim import *
 from recover import *
 
-N=5
+N=2
 pw_length=5
 
 genesis_accts = get_accounts()

@@ -5,36 +5,47 @@ import hashlib
 import random
 
 from pyteal import *
-from algosdk import *
+from algosdk.account import address_from_private_key
+from algosdk.encoding import decode_address
 from algosdk.v2client.algod import *
 from algosdk.future.transaction import *
 
 from escrow import escrow
 
+import scrypt
+
+
 
 client = AlgodClient("a"*64, "http://localhost:4001") 
 
+salt = b'aa1f2d3f4d23ac44e9c5a6c3d8f9ee8c'
+def get_address_from_pw(pw:str):
+    key = scrypt.hash(pw, salt, 2048, 8, 1, 32)
+
+    sk = SigningKey(key)
+    vk = sk.verify_key
+    a = encoding.encode_address(vk.encode())
+    private_key = base64.b64encode(sk.encode() + vk.encode()).decode()
+
+    return [a, private_key]
+
 tmpl_source = "" # lazy populated
-def populate_teal(seeder: str, pw: str, args=None) -> str:
+def populate_teal(seeder: str, pw: str) -> str:
     global tmpl_source
 
     if tmpl_source == "":
-        tmpl_source = compileTeal(
-            escrow(seeder), 
-            mode=Mode.Signature, 
-            version=5
-        )
+        with open("escrow.tmpl.teal", "r") as f:
+            tmpl_source = f.read()
 
-    h = hashlib.sha256(pw.encode('utf-8'))
-
+    addr, _ = get_address_from_pw(pw)
     src = tmpl_source.replace(
-        "TMPL_HASH_PREIMAGE", 
-        "0x{}".format(h.hexdigest())
+        "TMPL_GEN_ADDR", 
+        "0x{}".format(decode_address(addr).hex())
     )
 
     result = client.compile(src)
 
-    return LogicSigAccount(base64.b64decode(result['result']), args=args)
+    return LogicSigAccount(base64.b64decode(result['result']))
 
 
 def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int]) -> List[str]:
@@ -60,7 +71,6 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
 
         # group
         grouped = assign_group_id([payTxn, optInTxn, xferTxn])
-
 
         # sign 
         signed = [

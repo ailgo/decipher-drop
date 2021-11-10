@@ -1,5 +1,12 @@
 from pyteal import *
 
+#Generate a ED25519 secret key (which is a 32-byte string) sk = scrypt(salt, answer) where the salt is properly generated (https://en.wikipedia.org/wiki/Scrypt - the advantage is that you scrypt is much slower than SHA256sum, so you can get a number with less entropy)
+#Generate the associated public key pk
+#Create the following TEAL script:
+#Check that arg0 is the signature of txID under pk
+#Check everything else (that it’s a close transactions…)
+
+
 def escrow(seed_addr: str):
     seeder = Addr(seed_addr)
     is_valid_seed = And(
@@ -29,7 +36,14 @@ def escrow(seed_addr: str):
     is_valid_claim = And(
         Global.group_size() == Int(3),
 
-        Sha256(Arg(0)) == Tmpl.Bytes("TMPL_HASH_PREIMAGE"),
+        If(Txn.group_index()==Int(1))
+        .Then(
+            Ed25519Verify( 
+                Txn.tx_id(), 
+                Arg(0), 
+                Tmpl.Bytes("TMPL_GEN_ADDR")
+            )
+        ).Else(Int(1)),
 
         # Account Opt in
         Gtxn[0].type_enum() == TxnType.AssetTransfer,
@@ -77,7 +91,7 @@ def escrow(seed_addr: str):
     )
 
 if __name__=="__main__":
-    seed_addr = ""
+    seed_addr = "LSQUHBU6G6NN4NIZ2ANFPBTXPP2DYLSA3N5R2ZHD6JA7UIRVT2C7QU23FQ"
     with open("escrow.tmpl.teal", "w") as f:
         f.write(compileTeal(
             escrow(seed_addr), 
