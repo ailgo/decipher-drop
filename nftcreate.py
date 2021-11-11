@@ -9,9 +9,10 @@ client = AlgodClient("a"*64, "http://localhost:4001")
 def create(pk, sk):
     sp = client.suggested_params()
     createTxn = AssetConfigTxn(
-        pk, sp, index=0, total=1, 
-        default_frozen=False, 
-        asset_name="rando", 
+        pk, sp, index=0, total=1,
+        default_frozen=False,
+        asset_name="rando",
+        url="https://ipfs.io/ipfs/bafkreic6gizvypdrtzqitvbi5x6tzwvgpi6murkjt4icx4qlxs4m7oslwu",
         strict_empty_address_check=False
     )
     signed = createTxn.sign(sk)

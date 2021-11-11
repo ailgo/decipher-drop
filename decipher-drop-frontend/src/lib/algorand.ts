@@ -20,22 +20,27 @@ interface SignedTxn {
     blob: Uint8Array
 }
 
-export async function collect(sw: SessionWallet, escrow: string, addr: string, secret: string): Promise<number> {
+export interface NFT {
+    id: number
+    url: string
+    name: string
+}
+
+export async function collect(sw: SessionWallet, asaId: number, escrow: string, addr: string, secret: string): Promise<SignedTxn[]> {
+
+    //const claimer = sw.getDefaultAccount()
+    const sk = algosdk.mnemonicToSecretKey(mnemonic)
+    const claimer = sk.addr
+
     const lsig = await getLsig(addr)
-    const aidx = await getAsaId(escrow)
 
     const sp = await client.getTransactionParams().do()
     sp.lastRound = sp.firstRound + 10
 
-    //const claimer = sw.getDefaultAccount()
-
-    const sk = algosdk.mnemonicToSecretKey(mnemonic)
-    const claimer = sk.addr
-
     const optinTxn = new Transaction({
         from:claimer,
         to:claimer,
-        assetIndex: aidx,
+        assetIndex: asaId,
         type:TransactionType.axfer,
         amount:0,
         ...sp
@@ -44,7 +49,7 @@ export async function collect(sw: SessionWallet, escrow: string, addr: string, s
     const xferTxn = new Transaction({
         from:escrow,
         to:claimer,
-        assetIndex: aidx,
+        assetIndex: asaId,
         type:TransactionType.axfer,
         amount:0,
         closeRemainderTo: claimer,
@@ -69,17 +74,10 @@ export async function collect(sw: SessionWallet, escrow: string, addr: string, s
     const s_xfer = algosdk.signLogicSigTransactionObject(xferTxn, lsig)
     const s_close = algosdk.signLogicSigTransactionObject(closeTxn, lsig)
 
-    console.log(s_xfer)
-    console.log(s_close)
-
     //const [s_optin, /*xfer*/ , /*close*/] = await sw.signTxn(grouped)
     const s_optin = algosdk.signTransaction(optinTxn, sk.sk)
 
-    const sgroup = [s_optin, s_xfer, s_close]
-
-    await sendWait(sgroup)
-
-    return aidx
+    return [s_optin, s_xfer, s_close]
 }
 
 function createSignature(txid: string, escrow: string, secret: string): Uint8Array {
@@ -92,17 +90,24 @@ function createSignature(txid: string, escrow: string, secret: string): Uint8Arr
     toSign.set(addr, pd.length)
     toSign.set(btxid, pd.length + addr.length)
 
-    console.log(Buffer.from(toSign).toString('hex'))
-
     const sk = Buffer.from(secret, "base64")
     return nacl.sign.detached(toSign, sk);
 }
 
-async function getAsaId(escrow: string): Promise<number> {
+export async function getNFT(asaId: number): Promise<NFT> {
+    const asa = await client.getAssetByID(asaId).do()
+    const p = asa['params']
+    console.log(asa)
+    return {
+        id:   asaId,
+        url:  p['url'],
+        name: p['name']
+    } as NFT
+}
+
+export async function getAsaId(escrow: string): Promise<number> {
     const ai = await client.accountInformation(escrow).do()
-
     if(ai['assets'].length !== 1) throw Error("wat")
-
     return ai['assets'][0]['asset-id']
 }
 

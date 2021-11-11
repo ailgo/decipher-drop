@@ -4,11 +4,11 @@ from algosdk.future.transaction import AssetTransferTxn, PaymentTxn, assign_grou
 from algosdk.v2client.algod import *
 from seed import populate_teal
 
-client = AlgodClient("a"*64, "http://localhost:4001") 
+client = AlgodClient("a"*64, "http://localhost:4001")
 
-def recover(seeder: str, seeder_key: str, pw: str, nft: int):
+def recover(seeder: str, seeder_key: str, addr: str, nft: int):
 
-    lsig = populate_teal(seeder, pw)
+    lsig = populate_teal(seeder, addr)
 
     # Create txns to reclaim asset back to seeder
     sp = client.suggested_params()
@@ -26,5 +26,5 @@ def recover(seeder: str, seeder_key: str, pw: str, nft: int):
     ]
 
     txid = client.send_transactions(signed)
-    
+
     return wait_for_confirmation(client, txid, 3)

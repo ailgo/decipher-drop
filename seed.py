@@ -50,12 +50,10 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
     sp = client.suggested_params()
     for idx in range(len(pws)):
 
-        pw = pws[idx]
+        (addr, sk) = pws[idx]
         nftId = nfts[idx]
 
-        addr, _ = get_address_from_pw(pw)
-
-        lsig = populate_teal(seeder, pw)
+        lsig = populate_teal(seeder, addr)
 
         accts.append(lsig.address())
 
@@ -108,7 +106,10 @@ def initialize_accounts(seeder, seeder_key, nfts: List[int], pw_length=5):
     # Fund escrow accounts with the password set
     escrows = fund_accounts(seeder, seeder_key, pws, nfts)
 
+    import urllib.parse
+
     with open("drops.csv", "w") as f:
         for i in range(len(nfts)):
-            f.write("{},{},{}\n".format(escrows[i], pws[i][0], pws[i][1]))
+            pw = urllib.parse.quote_plus(pws[i][1])
+            f.write("{},{},{}\n".format(escrows[i], pws[i][0], pw))
 

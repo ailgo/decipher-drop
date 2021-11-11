@@ -11,9 +11,18 @@ from seed import get_address_from_pw, populate_teal
 
 client = AlgodClient("a"*64, "http://localhost:4001") 
 
-def get_drops() -> List[str]:
+def get_drops(decode: bool) -> List[str]:
+
     with open("drops.csv", "r") as f:
-        return [drop.split(",") for drop in f.read().splitlines()]
+        drops = [drop.split(",") for drop in f.read().splitlines()]
+
+
+    if decode:
+        import urllib.parse
+        for idx in range(len(drops)):
+            drops[idx][2] = parse.unquote_plus(drops[idx][2])
+
+    return drops
 
 def get_escrows(seeder: str, pws: List[str]) -> List[str]:
     accts = []
@@ -44,8 +53,8 @@ def claim(seeder, cpk, csk, escrow, pwaddr, pw, nft):
 
     key = base64.b64decode(pw)
 
-    claim_lsig = populate_teal(seeder, pw)
-    close_lsig = populate_teal(seeder, pw)
+    claim_lsig = populate_teal(seeder, pwaddr)
+    close_lsig = populate_teal(seeder, pwaddr)
 
     sp = client.suggested_params()
 
@@ -61,8 +70,7 @@ def claim(seeder, cpk, csk, escrow, pwaddr, pw, nft):
         base64.b32decode(_correct_padding(gclaim.get_txid()))
     )
 
-    private_key = base64.b64decode(key)
-    signing_key = SigningKey(private_key[:32])
+    signing_key = SigningKey(key[:32])
     signed      = signing_key.sign(to_sign)
 
     claim_lsig.lsig.args = [signed.signature]
@@ -80,4 +88,4 @@ def simulate_claim(seeder: str, escrow: str, pwaddr: str, pw: str, nft: int):
     [cpk, csk] = generate_claimer()
 
     print("Claiming on behalf of {}".format(cpk))
-    claim(seeder, cpk, csk, escrow, pw, nft)
+    claim(seeder, cpk, csk, escrow, pwaddr, pw, nft)
