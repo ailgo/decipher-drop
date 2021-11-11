@@ -10,36 +10,25 @@ from algosdk.encoding import decode_address
 from algosdk.v2client.algod import *
 from algosdk.future.transaction import *
 
-from escrow import escrow
+from escrow import get_contract
 
 import scrypt
 
 
 
-client = AlgodClient("a"*64, "http://localhost:4001") 
+client = AlgodClient("a"*64, "http://localhost:4001")
 
-salt = b'aa1f2d3f4d23ac44e9c5a6c3d8f9ee8c'
-def get_address_from_pw(pw:str):
-    key = scrypt.hash(pw, salt, 2048, 8, 1, 32)
-
-    sk = SigningKey(key)
-    vk = sk.verify_key
-    a = encoding.encode_address(vk.encode())
-    private_key = base64.b64encode(sk.encode() + vk.encode()).decode()
-
-    return [a, private_key]
 
 tmpl_source = "" # lazy populated
-def populate_teal(seeder: str, pw: str) -> str:
+def populate_teal(seeder: str, addr: str) -> str:
     global tmpl_source
 
     if tmpl_source == "":
-        with open("escrow.tmpl.teal", "r") as f:
-            tmpl_source = f.read()
+        tmpl_source = get_contract(seeder)
 
-    addr, _ = get_address_from_pw(pw)
+
     src = tmpl_source.replace(
-        "TMPL_GEN_ADDR", 
+        "TMPL_GEN_ADDR",
         "0x{}".format(decode_address(addr).hex())
     )
 
@@ -50,7 +39,10 @@ def populate_teal(seeder: str, pw: str) -> str:
 
 def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int]) -> List[str]:
     """
-        fund_accounts takes the seed acddress and key, a list of password strings, and nft ids
+        fund_accounts takes
+            the seed acddress and ,
+            a list of generated pk/sks,
+            and nft ids
         populate_teal returns the populated logic sig
         it hash the password, add it to the contract, compile the contract, and return
     """
@@ -60,6 +52,9 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
 
         pw = pws[idx]
         nftId = nfts[idx]
+
+        addr, _ = get_address_from_pw(pw)
+
         lsig = populate_teal(seeder, pw)
 
         accts.append(lsig.address())
@@ -74,8 +69,8 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
 
         # sign 
         signed = [
-            grouped[0].sign(seeder_key), 
-            LogicSigTransaction(grouped[1], lsig), 
+            grouped[0].sign(seeder_key),
+            LogicSigTransaction(grouped[1], lsig),
             grouped[2].sign(seeder_key)
         ]
 
@@ -85,7 +80,7 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
         # wait 
         result = wait_for_confirmation(client, txid, 2)
         if result['pool-error'] != "":
-            print("Failed to send transaction: {}".format(result['pool-error']))            
+            print("Failed to send transaction: {}".format(result['pool-error']))
 
         print("Confirmed in round {}: {}".format(result['confirmed-round'], result))
 
@@ -96,13 +91,24 @@ def gen_pw(N=5) -> str:
     return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
 
 
+salt = b'aa1f2d3f4d23ac44e9c5a6c3d8f9ee8c'
+def get_address_from_pw(pw: str):
+    key = scrypt.hash(pw, salt, 2048, 8, 1, 32)
+
+    sk = SigningKey(key)
+    vk = sk.verify_key
+    a = encoding.encode_address(vk.encode())
+    private_key = base64.b64encode(sk.encode() + vk.encode()).decode()
+
+    return [a, private_key]
+
 def initialize_accounts(seeder, seeder_key, nfts: List[int], pw_length=5):
     # Create n passwords
-    pws = [gen_pw(pw_length) for _ in range(len(nfts))]
-    with open("passwords.csv", "w") as f:
-        f.write("\n".join(pws))
-
+    pws = [get_address_from_pw(gen_pw(pw_length)) for _ in range(len(nfts))]
     # Fund escrow accounts with the password set
     escrows = fund_accounts(seeder, seeder_key, pws, nfts)
-    with open("escrows.csv", "w") as f:
-        f.write("\n".join(escrows))
+
+    with open("drops.csv", "w") as f:
+        for i in range(len(nfts)):
+            f.write("{},{},{}\n".format(escrows[i], pws[i][0], pws[i][1]))
+

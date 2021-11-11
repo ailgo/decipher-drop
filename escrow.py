@@ -84,11 +84,11 @@ def escrow(seed_addr: str):
         [Gtxn[0].sender() != seeder, Return(is_valid_claim)]
     )
 
+
+def get_contract(seeder: str) -> str:
+    return compileTeal(escrow(seeder), mode=Mode.Signature, version=5, assembleConstants=True)
+
 if __name__=="__main__":
     seed_addr = "LSQUHBU6G6NN4NIZ2ANFPBTXPP2DYLSA3N5R2ZHD6JA7UIRVT2C7QU23FQ"
     with open("escrow.tmpl.teal", "w") as f:
-        f.write(compileTeal(
-            escrow(seed_addr), 
-            mode=Mode.Signature, 
-            version=5
-        ))
+        f.write(get_contract(seed_addr))

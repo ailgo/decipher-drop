@@ -1,12 +1,11 @@
 import React from 'react'
 import { SessionWallet } from 'algorand-session-wallet';
 import AlgorandWalletConnector from './AlgorandWalletConnector'
-import { Alignment, Button, Navbar } from '@blueprintjs/core';
-import { collect }  from './lib/algorand'
+import { Alignment, Button, Card, Elevation, Navbar } from '@blueprintjs/core';
+import { conf, collect }  from './lib/algorand'
+import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 
-const conf = {
-  network:""
-}
+
 
 function App() {
   const sw = new SessionWallet(conf.network)
@@ -26,18 +25,22 @@ function App() {
     //  alert("Connect your wallet to collect your Al Goana")
     //}
 
-    const params = new URLSearchParams(window.location.search);
-    const secret = params.get("secret")
+    const params  = new URLSearchParams(window.location.search);
+    const escrow  = params.get("escrow")
+    const addr    = params.get("addr")
+    const secret  = params.get("secret")
 
-    if(secret === undefined || secret === null){
-      alert("No secret in url? Probly Ben's fault")
+    console.log(secret)
+
+    if(secret === null || addr == null || escrow == null){
+      alert("Something aint right, Probly Ben's fault")
       return
     }
 
     // Set loading
     // showToast("Sign the transaction dawg")
 
-    await collect(secret)
+    await collect(sw, escrow, addr, secret)
 
     // Set !loading 
     // showToast("Aight check yer wallet g")
@@ -47,12 +50,12 @@ function App() {
     <div className="App">
       <Navbar>
         <Navbar.Group align={Alignment.LEFT}>
-          <Navbar.Heading>Decipher Al Goanna</Navbar.Heading>
+          <Navbar.Heading>Decipher Dropper</Navbar.Heading>
           <Navbar.Divider />
         </Navbar.Group>
         <Navbar.Group  align={Alignment.RIGHT}>
           <AlgorandWalletConnector  
-            darkMode={false}
+            darkMode={true}
             sessionWallet={sessionWallet}
             accts={accts}
             connected={connected} 
@@ -61,7 +64,33 @@ function App() {
         </Navbar.Group>
       </Navbar>
       <div className='container'>
-        <Button icon='circle' text='Collect' onClick={handleCollect}  />
+        <Card elevation={Elevation.THREE}>
+          <div className='content'>
+            <div className='content-piece' >
+              <img className='gator' src='/algo-gator.png' />
+            </div>
+            <div className='content-details' >
+
+              <p>
+                This is where we'll write stuff
+              </p>
+              
+              <div className='collect-button' >
+                <Button 
+                    minimal={true} 
+                    outlined={true} 
+                    intent='success' 
+                    large={true} 
+                    icon='circle' 
+                    text='Collect' 
+                    onClick={handleCollect}  
+                  />
+                </div>
+
+            </div>
+
+          </div>
+        </Card>
       </div>
     </div>
   );

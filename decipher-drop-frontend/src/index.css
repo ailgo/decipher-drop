@@ -8,12 +8,20 @@
 
 .content {
 	display:flex;
-	align-items:center;
-	justify-content: space-evenly;
+	align-items:flex-start;
+}
+
+.content-piece {
+	max-width: 50%;
+	margin: 0.5rem;
 }
 
 .content-piece img {
+	max-width: 100%;
+}
+.content-details {
 	max-width: 50%;
+	margin: 0.5rem;
 }
 
 .wallet-option-list {
@@ -32,43 +40,3 @@
 	margin-right:0.5em
 }
 
-.content-info ul {
-	list-style-type: none;
-}
-
-.content-info li {
-	margin:2px;
-}
-
-.content-collection {
-	flex-direction:row;
-	flex-wrap:wrap	;
-}
-.content-collection-item {
-	width: 30em;
-	margin: 2em;
-}
-.content-collection-item img {
-	max-width: 100%;
-}
-
-.extra-prop-list {
-	list-style: none;
-}
-
-.extra-prop-item {
-	padding:0.1em;
-}
-
-.extra-prop-item input {
-	margin: 0.1em;
-}
-.extra-prop-add {
-	justify-self: right;
-}
-.extra-prop-dropdown {
-	flex-direction: column;
-}
-.container-mint {
-	justify-content: flex-end;
-}

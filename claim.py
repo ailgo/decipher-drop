@@ -11,14 +11,14 @@ from seed import get_address_from_pw, populate_teal
 
 client = AlgodClient("a"*64, "http://localhost:4001") 
 
-def get_passwords() -> List[str]:
-    with open("passwords.csv", "r") as f:
-        return f.read().splitlines()
+def get_drops() -> List[str]:
+    with open("drops.csv", "r") as f:
+        return [drop.split(",") for drop in f.read().splitlines()]
 
 def get_escrows(seeder: str, pws: List[str]) -> List[str]:
     accts = []
     for pw in pws:
-       lsig = populate_teal(seeder, pw) 
+       lsig = populate_teal(seeder, pw)
        accts.append(lsig.address())
     return accts
 
@@ -40,8 +40,9 @@ def generate_claimer():
     #return claimer pk/sk
     return [pk, sk]
 
-def claim(seeder, cpk, csk, pw, nft):
-    addr, key = get_address_from_pw(pw)
+def claim(seeder, cpk, csk, escrow, pwaddr, pw, nft):
+
+    key = base64.b64decode(pw)
 
     claim_lsig = populate_teal(seeder, pw)
     close_lsig = populate_teal(seeder, pw)
@@ -55,8 +56,8 @@ def claim(seeder, cpk, csk, pw, nft):
     [goptin, gclaim, gclose] = assign_group_id([optinTxn, claimTxn, closeTxn])
 
     to_sign = (
-        b"ProgData" + 
-        encoding.decode_address(claim_lsig.address()) + 
+        b"ProgData" +
+        encoding.decode_address(claim_lsig.address()) +
         base64.b32decode(_correct_padding(gclaim.get_txid()))
     )
 
@@ -75,8 +76,8 @@ def claim(seeder, cpk, csk, pw, nft):
     txid = client.send_transactions(signed)
     return wait_for_confirmation(client, txid, 3)
 
-def simulate_claim(seeder: str, pw: str, nft: int):
+def simulate_claim(seeder: str, escrow: str, pwaddr: str, pw: str, nft: int):
     [cpk, csk] = generate_claimer()
 
     print("Claiming on behalf of {}".format(cpk))
-    claim(seeder, cpk, csk, pw, nft)
+    claim(seeder, cpk, csk, escrow, pw, nft)
