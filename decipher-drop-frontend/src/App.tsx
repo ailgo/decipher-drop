@@ -63,6 +63,20 @@ function App() {
 
   }
 
+ /*
+
+For #1-444 (IRL)
+Congrats on successfully collecting your Decipher Ticket!
+Please make sure the asset is in your Algorand Mobile Wallet and ready to be presented when you arrive at the venue.
+See you at Decipher!
+-----------------------------------
+For #445-888 (Virtual)
+Congrats on successfully collecting your Algo Gator NFT!
+Enjoy it as a commemorative token that you’ve earned by being part of the Algorand community and signing up as a virtual VIP.
+See you online at Decipher!
+  
+ */
+
   return (
     <div className="App">
       <Navbar>
@@ -105,9 +119,7 @@ function App() {
                     loading={open}
                   />
                 </div>
-
             </div>
-
           </div>
         </Card>
       </div>
@@ -137,7 +149,7 @@ function ClaimDialog(props: ClaimDialogProps){
   useEffect(()=>{
     if(!props.signed || p >= 1.0) return;
 
-    const step = 100 / (5 * 1000)
+    const step = 100 / (8 * 1000)
     const interval = setInterval(()=>{
         p += step
         if(p > 1.0) {

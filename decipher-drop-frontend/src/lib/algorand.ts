@@ -7,13 +7,12 @@ import escrow_template from './contracts/escrow.tmpl.teal'
 
 
 export const conf = {
-    seeder: "LSQUHBU6G6NN4NIZ2ANFPBTXPP2DYLSA3N5R2ZHD6JA7UIRVT2C7QU23FQ",
-    network: ""
+    seeder: "XPLR7X7LQESKDK3SJYGLM7XJRN7FSINV3AZXKAQIZM4CXAM2ATLQQYXLCA",
+    network: "TestNet"
 }
 
-const mnemonic = "attend brisk rather library panda wood course put gadget dismiss tackle luxury grocery assume vocal beyond festival venue wrong large farm expect wheat about similar"
 
-const client = new algosdk.Algodv2("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "http://localhost", 4001)
+const client = new algosdk.Algodv2("", "https://testnet.algoexplorerapi.io", "")
 
 interface SignedTxn {
     txID: string,
@@ -28,9 +27,7 @@ export interface NFT {
 
 export async function collect(sw: SessionWallet, asaId: number, escrow: string, addr: string, secret: string): Promise<SignedTxn[]> {
 
-    //const claimer = sw.getDefaultAccount()
-    const sk = algosdk.mnemonicToSecretKey(mnemonic)
-    const claimer = sk.addr
+    const claimer = sw.getDefaultAccount()
 
     const lsig = await getLsig(addr)
 
@@ -74,8 +71,8 @@ export async function collect(sw: SessionWallet, asaId: number, escrow: string, 
     const s_xfer = algosdk.signLogicSigTransactionObject(xferTxn, lsig)
     const s_close = algosdk.signLogicSigTransactionObject(closeTxn, lsig)
 
-    //const [s_optin, /*xfer*/ , /*close*/] = await sw.signTxn(grouped)
-    const s_optin = algosdk.signTransaction(optinTxn, sk.sk)
+    const [s_optin, /*xfer*/ , /*close*/] = await sw.signTxn(grouped)
+    //const s_optin = algosdk.signTransaction(optinTxn, sk.sk)
 
     return [s_optin, s_xfer, s_close]
 }

@@ -89,6 +89,6 @@ def get_contract(seeder: str) -> str:
     return compileTeal(escrow(seeder), mode=Mode.Signature, version=5, assembleConstants=True)
 
 if __name__=="__main__":
-    seed_addr = "LSQUHBU6G6NN4NIZ2ANFPBTXPP2DYLSA3N5R2ZHD6JA7UIRVT2C7QU23FQ"
+    seed_addr = "XPLR7X7LQESKDK3SJYGLM7XJRN7FSINV3AZXKAQIZM4CXAM2ATLQQYXLCA"
     with open("escrow.tmpl.teal", "w") as f:
         f.write(get_contract(seed_addr))

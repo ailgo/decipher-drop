@@ -58,7 +58,7 @@ def fund_accounts(seeder: str, seeder_key: str, pws: List[str], nfts: List[int])
         accts.append(lsig.address())
 
         # seed, opt in, xfer
-        payTxn = PaymentTxn(seeder, sp, lsig.address(), int(0.3*10e6))
+        payTxn = PaymentTxn(seeder, sp, lsig.address(), int(0.3*1e6))
         optInTxn = AssetTransferTxn(lsig.address(), sp, lsig.address(), 0, nftId)
         xferTxn = AssetTransferTxn(seeder, sp, lsig.address(), 1, nftId)
 
