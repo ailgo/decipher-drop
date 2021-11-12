@@ -9,7 +9,7 @@ def escrow(seed_addr: str):
         # Seed with funds
         Gtxn[0].type_enum() == TxnType.Payment,
         Gtxn[0].sender() == seeder,
-        Gtxn[0].amount() == Int(int(0.3 * 10e6)), # 0.3 algos
+        Gtxn[0].amount() == Int(int(0.3 * 1e6)), # 0.3 algos
         Gtxn[0].close_remainder_to() == Global.zero_address(),
 
         # Opt escrow into asset
@@ -89,6 +89,10 @@ def get_contract(seeder: str) -> str:
     return compileTeal(escrow(seeder), mode=Mode.Signature, version=5, assembleConstants=True)
 
 if __name__=="__main__":
-    seed_addr = "XPLR7X7LQESKDK3SJYGLM7XJRN7FSINV3AZXKAQIZM4CXAM2ATLQQYXLCA"
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument( "--funder", help="Address used to fund escrow accounts", required=True)
+    args = parser.parse_args()
+
     with open("escrow.tmpl.teal", "w") as f:
-        f.write(get_contract(seed_addr))
+        f.write(get_contract(args.funder))

@@ -101,7 +101,7 @@ export default function AlgorandWalletConnector(props:AlgorandWalletConnectorPro
                 rightIcon='selection'
                 intent='warning'
                 outlined={true}
-                onClick={handleDisplayWalletSelection}>Connect Wallet</Button>
+                onClick={handleDisplayWalletSelection}>Connect</Button>
 
             <Dialog isOpen={selectorOpen} title='Select Wallet' onClose={handleSelectedWallet} >
                 <div className={Classes.DIALOG_BODY}>

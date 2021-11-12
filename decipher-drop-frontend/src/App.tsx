@@ -12,7 +12,7 @@ function App() {
   const sw = new SessionWallet(conf.network)
   const [sessionWallet, setSessionWallet] =  React.useState(sw)
 
-  const [nft, setNFT]               = React.useState({id: 0, url:'/algo-gator.png', name:"TBD"})
+  const [nft, setNFT]               = React.useState({id: 0, url:'algo-gator.png', name:"TBD"})
   const [accts, setAccounts]        = React.useState(sw.accountList())
   const [connected, setConnected]   = React.useState(sw.connected())
   const [claimable, setClaimable]   = React.useState(true)
@@ -81,8 +81,7 @@ See you online at Decipher!
     <div className="App">
       <Navbar>
         <Navbar.Group align={Alignment.LEFT}>
-          <Navbar.Heading>Decipher Dropper</Navbar.Heading>
-          <Navbar.Divider />
+          <Navbar.Heading><img className='header-icon' src='favicon.ico' /></Navbar.Heading>
         </Navbar.Group>
         <Navbar.Group  align={Alignment.RIGHT}>
           <AlgorandWalletConnector  
@@ -100,11 +99,16 @@ See you online at Decipher!
 
             <div className='content-piece' >
               <img className='gator' src={nft.url} />
-              <h3> {nft.name + " ("+ nft.id + ")"} </h3>
             </div>
             <div className='content-details' >
 
-              <p> This is where we'll write stuff </p>
+              <div className='detail-prose' >
+                <h3> Greetings Algonaut</h3>
+                <p> 
+                  Connect your wallet and claim your ticket
+                </p>
+              </div>
+
 
               <div className='collect-button' >
                 <Button 

@@ -1,35 +1,16 @@
 from os import write
 from typing import List
 from algosdk import *
-from algosdk.encoding import decode_address, _correct_padding, _undo_padding, is_valid_address
 from algosdk.v2client.algod import *
 from algosdk.future.transaction import *
 
-from sandbox import get_accounts
-from seed import get_address_from_pw, populate_teal
+from util import client, sign_txid, get_accounts , populate_teal
 
+def simulate_claim(seeder: str, pwaddr: str, pw: str, nft: int):
+    [cpk, csk] = generate_claimer()
 
-client = AlgodClient("a"*64, "http://localhost:4001") 
-
-def get_drops(decode: bool) -> List[str]:
-
-    with open("drops.csv", "r") as f:
-        drops = [drop.split(",") for drop in f.read().splitlines()]
-
-
-    if decode:
-        import urllib.parse
-        for idx in range(len(drops)):
-            drops[idx][2] = parse.unquote_plus(drops[idx][2])
-
-    return drops
-
-def get_escrows(seeder: str, pws: List[str]) -> List[str]:
-    accts = []
-    for pw in pws:
-       lsig = populate_teal(seeder, pw)
-       accts.append(lsig.address())
-    return accts
+    print("Claiming on behalf of {}".format(cpk))
+    claim(seeder, cpk, csk, pwaddr, pw, nft)
 
 def generate_claimer():
     #create acct
@@ -49,7 +30,7 @@ def generate_claimer():
     #return claimer pk/sk
     return [pk, sk]
 
-def claim(seeder, cpk, csk, escrow, pwaddr, pw, nft):
+def claim(seeder, cpk, csk, pwaddr, pw, nft):
 
     key = base64.b64decode(pw)
 
@@ -64,16 +45,8 @@ def claim(seeder, cpk, csk, escrow, pwaddr, pw, nft):
 
     [goptin, gclaim, gclose] = assign_group_id([optinTxn, claimTxn, closeTxn])
 
-    to_sign = (
-        b"ProgData" +
-        encoding.decode_address(claim_lsig.address()) +
-        base64.b32decode(_correct_padding(gclaim.get_txid()))
-    )
-
-    signing_key = SigningKey(key[:32])
-    signed      = signing_key.sign(to_sign)
-
-    claim_lsig.lsig.args = [signed.signature]
+    # Sign _after_ we group, otherwise txid changes
+    claim_lsig.lsig.args = [sign_txid(gclaim.get_txid(), claim_lsig.address(), key)]
 
     signed = [
         goptin.sign(csk),
@@ -81,11 +54,7 @@ def claim(seeder, cpk, csk, escrow, pwaddr, pw, nft):
         LogicSigTransaction(gclose, close_lsig),
     ]
 
+    write_to_file(signed, "tmp.txns")
+
     txid = client.send_transactions(signed)
     return wait_for_confirmation(client, txid, 3)
-
-def simulate_claim(seeder: str, escrow: str, pwaddr: str, pw: str, nft: int):
-    [cpk, csk] = generate_claimer()
-
-    print("Claiming on behalf of {}".format(cpk))
-    claim(seeder, cpk, csk, escrow, pwaddr, pw, nft)
