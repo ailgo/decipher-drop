@@ -4,7 +4,8 @@ from algosdk import *
 from algosdk.v2client.algod import *
 from algosdk.future.transaction import *
 
-from util import client, sign_txid, get_accounts , populate_teal
+from util import client, sign_txid, get_accounts, populate_teal
+
 
 def simulate_claim(seeder: str, pwaddr: str, pw: str, nft: int):
     [cpk, csk] = generate_claimer()
@@ -12,23 +13,25 @@ def simulate_claim(seeder: str, pwaddr: str, pw: str, nft: int):
     print("Claiming on behalf of {}".format(cpk))
     claim(seeder, cpk, csk, pwaddr, pw, nft)
 
+
 def generate_claimer():
-    #create acct
+    # create acct
     [sk, pk] = account.generate_account()
 
-    #fund test acct
+    # fund test acct
     sp = client.suggested_params()
     acct = get_accounts()[0]
 
     payTxn = PaymentTxn(acct[0], sp, pk, int(1e6))
     signed = payTxn.sign(acct[1])
 
-    #Send testnet algos
+    # Send testnet algos
     txid = client.send_transaction(signed)
     wait_for_confirmation(client, txid, 3)
 
-    #return claimer pk/sk
+    # return claimer pk/sk
     return [pk, sk]
+
 
 def claim(seeder, cpk, csk, pwaddr, pw, nft):
 
@@ -41,7 +44,9 @@ def claim(seeder, cpk, csk, pwaddr, pw, nft):
 
     optinTxn = AssetTransferTxn(cpk, sp, cpk, 0, nft)
     claimTxn = AssetTransferTxn(claim_lsig.address(), sp, cpk, 0, nft, cpk)
-    closeTxn = PaymentTxn(close_lsig.address(), sp, seeder, 0, close_remainder_to=seeder)
+    closeTxn = PaymentTxn(
+        close_lsig.address(), sp, seeder, 0, close_remainder_to=seeder
+    )
 
     [goptin, gclaim, gclose] = assign_group_id([optinTxn, claimTxn, closeTxn])
 
