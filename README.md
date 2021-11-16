@@ -4,13 +4,13 @@
 
 Often a creator will want to distribute the NFTs they've created in a pseudo-random way with little interaction from the receiver. This processes is made more difficult because a receiver needs to opt into the ASA ahead of time and it can be diffuclt to coordinate which ASA id they'd need to opt into.
 
-This repository demonstrates the use of a Smart Signature to hold an NFT and an Ed25519 signature validation to ensure security.  
+This repository demonstrates the use of a Smart Signature to hold an NFT and an ed25519 signature validation to ensure security.
 
 ## Details 
 
-Some number of Escrow accounts are created and funded with algos and an NFT. Each escrow account has a hardcoded, unique, ed25519 keypair that will allow any account passing a valid, matching, ed25519 signature of the claim transaction id to claim the NFT. 
+Some number of Escrow accounts are created and funded with algos and an NFT. Each escrow account has a hardcoded, unique, ed25519 public key.  During the claim processes the public key is used to allow any account passing a valid, matching, ed25519 signature of the claim transaction id to claim the NFT. 
 
-In order to claim the NFT, the user is passed the secret key for the relevant escrow account. The key is then used to sign the transaction id of the second transaction in the the atomic group and the signature is passed as the 0th argument.  
+In order to claim the NFT, the user is passed the secret key (or password, salt and key generation parameters to reproduce the key) for the relevant escrow account. The key is then used to sign the transaction id of the second transaction in the the atomic group and the signature is passed as the 0th argument.
 
 The contract validates that the signature passed is a valid for the public key it has hardcoded and approves the transaction.
 
