@@ -41,6 +41,8 @@ Three operations against the Escrow logic are allowed:
 
 *demo.py* - Python logic to run e2e to simulate NFTs creation, escrow NFT and algo funding, run NFT claim txns, recover unclaimed NFTs
 
+*util.py* - Some utility related functions that are used in multiple places
+
 ## Running
 
 clone sandbox and run:
@@ -50,5 +52,23 @@ cd sandbox && ./sandbox up dev
 
 cd to this repo and run:
 ```sh
-python demo.py
+python demo.py -h
+```
+
+
+```sh
+usage: demo.py [-h] [-count COUNT] [-create] [-fund] [-claim] [-recover]
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -count COUNT  Number of NFTs to create
+  -create       Create Set of NFTs
+  -fund         Send Algos and NFT to escrow accounts
+  -claim        Create accounts and attempt to claim nfts from escrows
+  -recover      Use the seeder account to recover nft from escrow
+```
+
+to run through the full demo
+```sh
+python demo.py -count 10 -create -fund -claim -recover
 ```

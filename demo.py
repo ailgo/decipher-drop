@@ -19,7 +19,11 @@ def demo(args):
     else:
         print("Skipping nft create")
 
-    nftIds = read_asa_ids()
+    try:
+        nftIds = read_asa_ids()
+    except:
+        print("No ASA Ids defined, please create some with the -create flag")
+        return
 
     if args.fund:
         print("Funding escrow accounts to hold nfts")
@@ -27,7 +31,12 @@ def demo(args):
     else:
         print("Skipping fund")
 
-    drops = read_drops(False)
+    try:
+        drops = read_drops(False)
+    except:
+        print("No drops created yet, please create them with the -fund flag")
+        return
+
 
     if args.claim:
         print("Claiming {} NFTs".format(len(nftIds) - 1))
