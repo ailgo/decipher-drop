@@ -6,6 +6,12 @@ Often a creator will want to distribute the NFTs they've created in a pseudo-ran
 
 This repository demonstrates the use of a Smart Signature acting as an escrow to hold an NFT and ed25519 signature validation allow the holder of a secret key to claim the NFT.
 
+Can be used in conjunction with the [Decipher Tickets](https://github.com/algorand-devrel/decipher-tickets) front end for a full solution
+
+*Why not just use a password and compare with pre-image of the hash of the password?*
+
+If the transaction was submitted to a malicious node, that node may not forward the transaction but instead capture the password and create a transaction to claim the NFT on its behalf. By using an ed25519 keypair and signing the transaction id, a malicious node cannot produce a transaction that will pass the ed25519 verification.
+
 ## Details 
 
 Some number of Escrow accounts are created and funded with algos and an NFT. Each escrow account has a hardcoded, unique, ed25519 public key.  During the claim processes the public key is used to allow any account passing a valid, matching, ed25519 signature of the claim transaction id to claim the NFT. 
