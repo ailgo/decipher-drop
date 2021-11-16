@@ -1,4 +1,4 @@
-# Smart Signature Password Verification NFT Drop Demo
+# Password Verification NFT Drop Demo
 
 ## Summary
 
