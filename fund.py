@@ -10,20 +10,22 @@ from util import write_drops, create_account, client, populate_teal
 from escrow import get_contract
 
 
-def initialize_accounts(seeder, seeder_key, nfts: List[int]):
+def fund_escrows(seeder, seeder_key, nfts: List[int]):
     # Create len(nfts) pseudo-accounts
     pws = [create_account() for _ in range(len(nfts))]
     # Fund escrow accounts with the password set
     escrows = fund_accounts(seeder, seeder_key, pws, nfts)
-    write_drops(escrows, pws)
+    write_drops(escrows, pws, nfts)
 
 
 # Create and fund the escrow accounts, return list of escrow addresses
 def fund_accounts(
     seeder: str, seeder_key: str, pws: List[str], nfts: List[int]
 ) -> List[str]:
+
     accts = []
     sp = client.suggested_params()
+    txid = ""
     for idx in range(len(pws)):
         (addr, _) = pws[idx]
         nftId = nfts[idx]
@@ -50,11 +52,10 @@ def fund_accounts(
         # send
         txid = client.send_transactions(signed)
 
-        # wait
-        result = wait_for_confirmation(client, txid, 2)
-        if result["pool-error"] != "":
-            print("Failed to send transaction: {}".format(result["pool-error"]))
+        # Make sure it was committed
+        # wait_for_confirmation(client, txid, 2)
 
-        print("Confirmed in round {}: {}".format(result["confirmed-round"], result))
+    # Only wait for the last one
+    wait_for_confirmation(client, txid, 2)
 
     return accts

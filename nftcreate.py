@@ -3,13 +3,16 @@ from typing import List
 from algosdk import *
 from algosdk.v2client.algod import *
 from algosdk.future.transaction import *
-from util import client
+from util import client, write_asa_ids
 
 
 def createNFTs(pk, sk, N=5) -> List[int]:
     created = []
-    for _ in range(N):
+    for idx in range(N):
+        print("Creating asset #{}".format(idx))
         created.append(create(pk, sk))
+
+    write_asa_ids(created)
     return created
 
 
@@ -21,8 +24,8 @@ def create(pk, sk):
         index=0,
         total=1,
         default_frozen=False,
-        asset_name="rando",
-        url="https://ipfs.io/ipfs/bafkreic6gizvypdrtzqitvbi5x6tzwvgpi6murkjt4icx4qlxs4m7oslwu",
+        asset_name="FakeGator",
+        url="ipfs://QmPdVFk9aAWEi4JW4LfbJNbnexWk9mrniRcTYf34vxV6bn",
         strict_empty_address_check=False,
     )
     signed = createTxn.sign(sk)

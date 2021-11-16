@@ -9,6 +9,7 @@ from algosdk.future.transaction import *
 from algosdk.encoding import _correct_padding, decode_address
 
 from escrow import get_contract
+import gc
 
 
 # The default wallet in a private network in sandbox is named "unencrypted-default-wallet"
@@ -27,10 +28,12 @@ client = AlgodClient("a" * 64, "http://localhost:4001")
 tmpl_source = ""  # lazy populated
 
 
-def populate_teal(seeder: str, addr: str) -> str:
+def populate_teal(seeder: str, addr: str) -> LogicSigAccount:
     global tmpl_source
 
     if tmpl_source == "":
+        # Creates contract source from pyteal with passed
+        # "seeder" variable and set it in the global context
         tmpl_source = get_contract(seeder)
 
     # Replace the template variable in the teal source
@@ -39,6 +42,7 @@ def populate_teal(seeder: str, addr: str) -> str:
         "TMPL_GEN_ADDR", "0x{}".format(decode_address(addr).hex())
     )
 
+    # Compile the populated template contract and return a LogicSsig
     result = client.compile(src)
     return LogicSigAccount(base64.b64decode(result["result"]))
 
@@ -56,6 +60,12 @@ def create_account(pw: bytearray = None, salt: bytearray = None):
         salt = secrets.token_bytes(8)
 
     key = scrypt.hash(pw, salt, 2048, 8, 1, 32)
+
+    # wipe memory containing pw/salt, not strictly necessary for this use but
+    # generally good practice
+    del pw
+    del salt
+    gc.collect()
 
     sk = SigningKey(key)
     vk = sk.verify_key
@@ -82,11 +92,24 @@ def sign_txid(txid: str, escrow: str, key: bytearray) -> bytearray:
     return signed.signature
 
 
+# Write a list of asa ids to local file
+def write_asa_ids(ids: List[int]):
+    with open("asa_ids.csv", "w") as f:
+        for i in ids:
+            f.write("{}\n".format(i))
+
+
+# Read local file containing asa ids
+def read_asa_ids() -> List[int]:
+    with open("asa_ids.csv", "r") as f:
+        return [int(i) for i in f.read().split("\n")[:-1]]
+
+
 # Write out the escrows, drop public key, drop private key to a csv
-def write_drops(escrows: List[str], pws: List[List[str]]):
+def write_drops(escrows: List[str], pws: List[List[str]], nfts: List[int]):
     with open(drop_file, "w") as f:
         for i in range(len(escrows)):
-            f.write("{},{},{}\n".format(escrows[i], pws[i][0], pws[i][1]))
+            f.write("{},{},{},{}\n".format(escrows[i], pws[i][0], pws[i][1], nfts[i]))
 
 
 # Read in the escrows, drop pk, drop sk (b64)

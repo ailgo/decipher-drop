@@ -59,7 +59,5 @@ def claim(seeder, cpk, csk, pwaddr, pw, nft):
         LogicSigTransaction(gclose, close_lsig),
     ]
 
-    write_to_file(signed, "tmp.txns")
-
     txid = client.send_transactions(signed)
     return wait_for_confirmation(client, txid, 3)
