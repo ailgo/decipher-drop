@@ -4,7 +4,7 @@
 
 Often a creator will want to distribute the NFTs they've created in a pseudo-random way with little interaction from the receiver. This processes is made more difficult because a receiver needs to opt into the ASA ahead of time and it can be diffuclt to coordinate which ASA id they'd need to opt into.
 
-This repository demonstrates the use of a Smart Signature acting as an escrwow to hold an NFT and ed25519 signature validation allow the holder of a secret key to claim the NFT.
+This repository demonstrates the use of a Smart Signature acting as an escrow to hold an NFT and ed25519 signature validation allow the holder of a secret key to claim the NFT.
 
 ## Details 
 
